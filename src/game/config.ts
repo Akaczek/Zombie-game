@@ -3,13 +3,11 @@ import { Example } from './scene';
 
 export const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  scene: Example,
+  parent: 'phaser-example',
+  width: 1600,
+  height: 900,
   physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 200, x: 0 },
-    },
+      default: 'arcade',
   },
+  scene: Example
 };
