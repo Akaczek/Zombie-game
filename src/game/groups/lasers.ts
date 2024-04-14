@@ -1,4 +1,4 @@
-export class LaserGroup extends Phaser.Physics.Arcade.Group {
+class LaserGroup extends Phaser.Physics.Arcade.Group {
   constructor(scene: Phaser.Scene) {
     super(scene.physics.world, scene);
 
@@ -8,6 +8,7 @@ export class LaserGroup extends Phaser.Physics.Arcade.Group {
       active: false,
       visible: false,
       key: 'laser',
+      setScale: { x: 0.5, y: 0.5 }
     });
   }
 
@@ -44,7 +45,10 @@ class Laser extends Phaser.Physics.Arcade.Sprite {
       this.setActive(true);
       this.setVisible(true);
       this.setAngle(angle);
+      this.setRotation(angle * Phaser.Math.DEG_TO_RAD + Math.PI / 2);
       this.scene.physics.velocityFromAngle(angle, 1000, this.body.velocity);
     }
   }
 }
+
+export default LaserGroup;

@@ -3,8 +3,8 @@ import { Example } from './scene';
 
 export const config = {
   type: Phaser.AUTO,
-  parent: 'phaser-example',
-  width: 1600,
+  parent: 'phaser-container',
+  width: 1280,
   height: 900,
   physics: {
       default: 'arcade',

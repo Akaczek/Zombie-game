@@ -1,10 +1,7 @@
-import block from './assets/block.png';
-import background from './assets/background.png';
-import player from './assets/player.png';
-import { LaserGroup } from './groups/lasers';
+import { background, bullet, player, zombie } from './assets';
+import { EnemyGroup, LaserGroup } from './groups';
 
 export class Example extends Phaser.Scene {
-  moveCam: boolean;
   cursors!: {
     up: Phaser.Input.Keyboard.Key;
     down: Phaser.Input.Keyboard.Key;
@@ -13,26 +10,39 @@ export class Example extends Phaser.Scene {
   };
   player!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   laserGroup!: LaserGroup;
-  enemy!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
+  enemyGroup!: EnemyGroup;
 
   constructor() {
     super();
-    this.moveCam = false;
   }
 
   shootLaser(mouseX: number, mouseY: number) {
-    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, mouseX, mouseY);
-    this.laserGroup.fireLaser(this.player.x, this.player.y, angle * Phaser.Math.RAD_TO_DEG);
+    const angle = Phaser.Math.Angle.Between(
+      this.player.x,
+      this.player.y,
+      mouseX,
+      mouseY
+    );
+    this.laserGroup.fireLaser(
+      this.player.x,
+      this.player.y,
+      angle * Phaser.Math.RAD_TO_DEG
+    );
   }
 
-  onCollide() {
-    console.log('collide');
+  onCollide(
+    enemy: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
+    laser: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+  ) {
+    enemy.destroy();
+    laser.destroy();
   }
 
   preload() {
     this.load.image('bg', background);
-    this.load.image('block', block);
+    this.load.image('zombie', zombie);
     this.load.image('player', player);
+    this.load.image('laser', bullet);
   }
 
   create() {
@@ -46,6 +56,10 @@ export class Example extends Phaser.Scene {
     this.add.image(0, 0, 'bg').setOrigin(0);
 
     this.laserGroup = new LaserGroup(this);
+    this.enemyGroup = new EnemyGroup(this);
+
+    this.enemyGroup.addEnemy(-256, 256);
+    this.enemyGroup.addEnemy(256, -256);
 
     if (this.input.keyboard) {
       this.cursors = {
@@ -55,21 +69,9 @@ export class Example extends Phaser.Scene {
           down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
           left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
           right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-        }
+        },
       };
     }
-
-    this.player = this.physics.add.image(0, 0, 'player');
-    this.player.scale = 0.5;
-    this.player.setCollideWorldBounds(true);
-
-    this.enemy = this.physics.add.image(400, 400, 'block');
-    this.enemy.setCollideWorldBounds(true);
-
-    this.cameras.main.startFollow(this.player, true);
-
-    // this.cameras.main.setDeadzone(400, 200);
-    // this.cameras.main.setZoom(0.5);
 
     if (this.cameras.main.deadzone) {
       const graphics = this.add.graphics().setScrollFactor(0);
@@ -82,15 +84,15 @@ export class Example extends Phaser.Scene {
       );
     }
 
+    this.player = this.physics.add.image(0, 0, 'player');
+    this.player.scale = 0.5;
+    this.player.setCollideWorldBounds(true);
+
+    this.cameras.main.startFollow(this.player, true);
+
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.shootLaser(pointer.worldX, pointer.worldY);
     });
-
-    this.physics.add.overlap(this.laserGroup, this.enemy, (obj1, obj2) => {
-      obj1.destroy();
-      obj2.destroy();
-      console.log(obj1, obj2);
-    }, undefined, this);
   }
 
   update() {
@@ -107,5 +109,7 @@ export class Example extends Phaser.Scene {
     } else if (this.cursors.down.isDown) {
       this.player.setVelocityY(300);
     }
+
+    this.physics.overlap(this.laserGroup, this.enemyGroup, this.onCollide, undefined, this);
   }
 }
