@@ -20,6 +20,10 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
     scene.physics.world.enable(this);
     scene.add.existing(this);
   }
+
+  preUpdate() {
+    this.scene.physics.moveTo(this, this.scene.player.x, this.scene.player.y, 200);
+  }
 }
 
 export default EnemyGroup;

@@ -1,7 +1,7 @@
-import { background, bullet, player, zombie } from './assets';
-import { EnemyGroup, LaserGroup } from './groups';
+import { background, bullet, player, zombie, heart } from '../assets';
+import { EnemyGroup, LaserGroup } from '../groups';
 
-export class Example extends Phaser.Scene {
+export class Game extends Phaser.Scene {
   cursors!: {
     up: Phaser.Input.Keyboard.Key;
     down: Phaser.Input.Keyboard.Key;
@@ -11,9 +11,11 @@ export class Example extends Phaser.Scene {
   player!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   laserGroup!: LaserGroup;
   enemyGroup!: EnemyGroup;
+  hasCollidedwithEnemy: boolean = false;
+  hearts!: Phaser.GameObjects.Group;
 
   constructor() {
-    super();
+    super('game');
   }
 
   shootLaser(mouseX: number, mouseY: number) {
@@ -38,11 +40,33 @@ export class Example extends Phaser.Scene {
     laser.destroy();
   }
 
+  onCollideEnemy(
+    player: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
+    enemy: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+  ) {
+    if (this.hasCollidedwithEnemy) return;
+    this.hasCollidedwithEnemy = true;
+    enemy.destroy();
+    this.hearts.children.each((heart, index) => {
+      if (index === 0) {
+        heart.destroy();
+        this.hasCollidedwithEnemy = false;
+      }
+      return false;
+    });
+    this.hasCollidedwithEnemy = false;
+  }
+
+  spawnEnemy() {
+    this.enemyGroup.addEnemy(Phaser.Math.Between(-1024, 1024), Phaser.Math.Between(-1024, 1024));
+  }
+
   preload() {
     this.load.image('bg', background);
     this.load.image('zombie', zombie);
     this.load.image('player', player);
     this.load.image('laser', bullet);
+    this.load.image('heart', heart);
   }
 
   create() {
@@ -58,8 +82,27 @@ export class Example extends Phaser.Scene {
     this.laserGroup = new LaserGroup(this);
     this.enemyGroup = new EnemyGroup(this);
 
-    this.enemyGroup.addEnemy(-256, 256);
-    this.enemyGroup.addEnemy(256, -256);
+    this.hearts = this.add.group({
+      key: 'heart',
+      repeat: 2,
+      setXY: {
+        x: 1130,
+        y: 40,
+        stepX: 60,
+      },
+      setScale: {
+        x: 2,
+        y: 2,
+      },
+    });
+
+    this.hearts.getChildren().forEach(heart => {
+      heart.setScrollFactor(0);
+    });
+
+    this.events.on('lose', () => {
+      this.scene.start('lose-screen');
+    });
 
     if (this.input.keyboard) {
       this.cursors = {
@@ -93,6 +136,14 @@ export class Example extends Phaser.Scene {
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.shootLaser(pointer.worldX, pointer.worldY);
     });
+
+    this.time.addEvent({
+      delay: 2000,
+      callback: this.spawnEnemy,
+      callbackScope: this,
+      loop: true,
+    
+    })
   }
 
   update() {
@@ -111,5 +162,10 @@ export class Example extends Phaser.Scene {
     }
 
     this.physics.overlap(this.laserGroup, this.enemyGroup, this.onCollide, undefined, this);
+    this.physics.overlap(this.player, this.enemyGroup, this.onCollideEnemy, undefined, this);
+
+    if(this.hearts.countActive() === 0) {
+      this.events.emit('lose');
+    }
   }
 }

@@ -1,23 +1,13 @@
 class LaserGroup extends Phaser.Physics.Arcade.Group {
   constructor(scene: Phaser.Scene) {
     super(scene.physics.world, scene);
-
-    this.createMultiple({
-      classType: Laser,
-      frameQuantity: 30,
-      active: false,
-      visible: false,
-      key: 'laser',
-      setScale: { x: 0.5, y: 0.5 }
-    });
   }
 
   fireLaser(x: number, y: number, angle: number) {
-    const laser = this.getFirstDead(false);
+    const laser = new Laser(this.scene, x, y);
+    this.add(laser);
 
-    if (laser) {
-      laser.fire(x, y, angle);
-    }
+    laser.fire(x, y, angle);
   }
 
   getGroup() {
@@ -28,6 +18,8 @@ class LaserGroup extends Phaser.Physics.Arcade.Group {
 class Laser extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'laser');
+    scene.physics.world.enable(this);
+    scene.add.existing(this);
   }
 
   preUpdate(time: number, delta: number) {
@@ -41,6 +33,8 @@ class Laser extends Phaser.Physics.Arcade.Sprite {
 
   fire(x: number, y: number, angle: number) {
     if (this.body) {
+      this.scaleX = 0.5;
+      this.scaleY = 0.5;
       this.body.reset(x, y);
       this.setActive(true);
       this.setVisible(true);

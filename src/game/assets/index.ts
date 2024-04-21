@@ -3,6 +3,7 @@ import block from './block.png';
 import bullet from './bullet.png';
 import player from './player.png';
 import zombie from './zombie.png';
+import heart from './heart.png';
 
 export {
   background,
@@ -10,4 +11,5 @@ export {
   bullet,
   player,
   zombie,
+  heart
 }
