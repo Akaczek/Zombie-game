@@ -1,5 +1,6 @@
 import { background, bullet, player, zombie, heart } from '../assets';
 import { EnemyGroup, LaserGroup } from '../groups';
+import { Enemy } from '../groups/enemies';
 
 export class Game extends Phaser.Scene {
   cursors!: {
@@ -13,6 +14,9 @@ export class Game extends Phaser.Scene {
   enemyGroup!: EnemyGroup;
   hasCollidedwithEnemy: boolean = false;
   hearts!: Phaser.GameObjects.Group;
+  score: number = 0;
+  scoreText!: Phaser.GameObjects.Text;
+  damage: number = 1;
 
   constructor() {
     super('game');
@@ -33,15 +37,26 @@ export class Game extends Phaser.Scene {
   }
 
   onCollide(
-    enemy: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
-    laser: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+    laser:
+      | Phaser.Types.Physics.Arcade.GameObjectWithBody
+      | Phaser.Tilemaps.Tile,
+    enemy: Enemy
   ) {
-    enemy.destroy();
+    enemy.enemyHit(this.damage);
     laser.destroy();
   }
 
+  spawnEnemy() {
+    this.enemyGroup.addEnemy(
+      Phaser.Math.Between(-1024, 1024),
+      Phaser.Math.Between(-1024, 1024)
+    );
+  }
+
   onCollideEnemy(
-    player: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
+    player:
+      | Phaser.Types.Physics.Arcade.GameObjectWithBody
+      | Phaser.Tilemaps.Tile,
     enemy: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
   ) {
     if (this.hasCollidedwithEnemy) return;
@@ -57,8 +72,19 @@ export class Game extends Phaser.Scene {
     this.hasCollidedwithEnemy = false;
   }
 
-  spawnEnemy() {
-    this.enemyGroup.addEnemy(Phaser.Math.Between(-1024, 1024), Phaser.Math.Between(-1024, 1024));
+  onLose() {
+    this.scene.stop();
+    this.damage = 1;
+    this.scene.start('lose-screen');
+  }
+
+  onEnemyKilled() {
+    this.score += 1;
+    this.scoreText.setText(`Score: ${this.score}`);
+  }
+
+  onResume(_: unknown, data: { damage: number }) {
+    this.damage = data.damage;
   }
 
   preload() {
@@ -82,6 +108,12 @@ export class Game extends Phaser.Scene {
     this.laserGroup = new LaserGroup(this);
     this.enemyGroup = new EnemyGroup(this);
 
+    this.scoreText = this.add.text(16, 16, 'Score: 0', {
+      fontSize: '32px',
+      color: '#fff',
+    });
+    this.scoreText.setScrollFactor(0);
+
     this.hearts = this.add.group({
       key: 'heart',
       repeat: 2,
@@ -96,12 +128,18 @@ export class Game extends Phaser.Scene {
       },
     });
 
-    this.hearts.getChildren().forEach(heart => {
+    this.hearts.getChildren().forEach((heart) => {
       heart.setScrollFactor(0);
     });
 
-    this.events.on('lose', () => {
-      this.scene.start('lose-screen');
+    this.events.on('lose', this.onLose, this);
+    this.events.on('enemy-killed', this.onEnemyKilled, this);
+    this.events.on('resume', this.onResume, this);
+
+    this.events.once('shutdown', () => {
+      this.events.off('lose', this.onLose, this);
+      this.events.off('enemy-killed', this.onEnemyKilled, this);
+      this.events.off('resume', this.onResume, this);
     });
 
     if (this.input.keyboard) {
@@ -137,13 +175,17 @@ export class Game extends Phaser.Scene {
       this.shootLaser(pointer.worldX, pointer.worldY);
     });
 
+    this.input.keyboard?.on('keydown-ESC', () => {
+      this.scene.pause();
+      this.scene.launch('pause', { damage: this.damage });
+    });
+
     this.time.addEvent({
       delay: 2000,
       callback: this.spawnEnemy,
       callbackScope: this,
       loop: true,
-    
-    })
+    });
   }
 
   update() {
@@ -161,10 +203,22 @@ export class Game extends Phaser.Scene {
       this.player.setVelocityY(300);
     }
 
-    this.physics.overlap(this.laserGroup, this.enemyGroup, this.onCollide, undefined, this);
-    this.physics.overlap(this.player, this.enemyGroup, this.onCollideEnemy, undefined, this);
+    this.physics.overlap(
+      this.laserGroup,
+      this.enemyGroup,
+      this.onCollide,
+      undefined,
+      this
+    );
+    this.physics.overlap(
+      this.player,
+      this.enemyGroup,
+      this.onCollideEnemy,
+      undefined,
+      this
+    );
 
-    if(this.hearts.countActive() === 0) {
+    if (this.hearts.countActive() === 0) {
       this.events.emit('lose');
     }
   }

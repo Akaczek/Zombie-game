@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Game } from './scenes/GameScene';
 import { StartScreen } from './scenes/StartScreen';
 import { LoseScreen } from './scenes/LoseScreen';
+import { PauseScene } from './scenes/PauseScene';
 
 export const config = {
   type: Phaser.AUTO,
@@ -11,5 +12,5 @@ export const config = {
   physics: {
       default: 'arcade',
   },
-  scene: [StartScreen, Game, LoseScreen]
+  scene: [StartScreen, Game, LoseScreen, PauseScene]
 };
