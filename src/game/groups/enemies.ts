@@ -6,6 +6,10 @@ class EnemyGroup extends Phaser.Physics.Arcade.Group {
   }
 
   addEnemy(x: number, y: number) {
+    const angle = Phaser.Math.Between(0, 360);
+    const distance = Phaser.Math.Between(500, 900);
+    x += distance * Math.cos(angle);
+    y += distance * Math.sin(angle);
     // Create a new enemy
     const enemy = new Enemy(this.scene, x, y);
 
@@ -26,8 +30,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   enemyHit(damage: number) {
     this.enemyHP -= damage;
-    console.log('Enemy hit', this.enemyHP);
     if (this.enemyHP <= 0) {
+      this.scene.events.emit('enemy-killed');
       this.destroy();
     }
   }

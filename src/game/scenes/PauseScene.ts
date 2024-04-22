@@ -1,29 +1,70 @@
 export class PauseScene extends Phaser.Scene {
   dmg: number = 0;
+  score: number = 0;
+  dmgText!: Phaser.GameObjects.Text;
+  scoreText!: Phaser.GameObjects.Text;
+  upgradeButton!: Phaser.GameObjects.Text;
 
   constructor() {
     super('pause');
   }
 
-  init (data: { damage: number }) {
+  init (data: { damage: number, score: number}) {
     this.dmg = data.damage;
+    this.score = data.score;
   }
 
   create() {
     const { width, height } = this.scale;
     const x = width * 0.5;
-    const y = height * 0.5;
 
     this.add.rectangle(0, 0, width, height, 0x000000, 0.5).setOrigin(0);
 
-    this.add.text(x, y, 'Game Paused', {
+    this.add.text(x, 100, 'Game Paused', {
       fontSize: '48px',
       color: '#fff',
     }).setOrigin(0.5);
 
-    this.input.keyboard.once('keydown-ESC', () => {
-      this.scene.stop();
-      this.scene.resume('game', { damage: 2 });
+    this.add.rectangle(x, 300, 400, 300, 0x000000).setOrigin(0.5);
+
+    this.scoreText = this.add.text(x, 180, `Score: ${this.score}`, {
+      fontSize: '30px',
+      color: '#fff',
+    }).setOrigin(0.5, 0)
+
+    this.upgradeButton = this.add.text(x, 225, 'Upgrade Damage (cost: 5)', {
+      fontSize: '24px',
+      color: '#fff',
+    }).setOrigin(0.5, 0)
+    this.upgradeButton.setInteractive();
+
+    this.dmgText = this.add.text(x, 260, `Damage: ${this.dmg}`, {
+      fontSize: '24px',
+      color: '#fff',
+    }).setOrigin(0.5, 0)
+
+    this.upgradeButton.on('pointerdown', () => {
+      if (this.score >= 5) {
+        this.score -= 5;
+        this.dmg += 1;
+        this.scoreText.setText(`Score: ${this.score}`);
+        this.dmgText.setText(`Damage: ${this.dmg}`);
+      }
     });
+
+    this.upgradeButton.on('pointerover', () => {
+      this.upgradeButton.setColor('#ff0');
+    });
+
+    this.upgradeButton.on('pointerout', () => {
+      this.upgradeButton.setColor('#fff');
+    });
+
+    if (this.input.keyboard) {
+      this.input.keyboard.once('keydown-ESC', () => {
+        this.scene.stop();
+        this.scene.resume('game', { damage: this.dmg, score: this.score});
+      });
+    }
   }
 }

@@ -17,6 +17,7 @@ export class Game extends Phaser.Scene {
   score: number = 0;
   scoreText!: Phaser.GameObjects.Text;
   damage: number = 1;
+  movementSpeed: number = 3;
 
   constructor() {
     super('game');
@@ -48,8 +49,8 @@ export class Game extends Phaser.Scene {
 
   spawnEnemy() {
     this.enemyGroup.addEnemy(
-      Phaser.Math.Between(-1024, 1024),
-      Phaser.Math.Between(-1024, 1024)
+      this.player.x,
+      this.player.y,
     );
   }
 
@@ -79,12 +80,15 @@ export class Game extends Phaser.Scene {
   }
 
   onEnemyKilled() {
+    console.log('Enemy killed');
     this.score += 1;
     this.scoreText.setText(`Score: ${this.score}`);
   }
 
-  onResume(_: unknown, data: { damage: number }) {
+  onResume(_: unknown, data: { damage: number, score: number }) {
     this.damage = data.damage;
+    this.score = data.score;
+    this.scoreText.setText(`Score: ${this.score}`);
   }
 
   preload() {
@@ -177,11 +181,11 @@ export class Game extends Phaser.Scene {
 
     this.input.keyboard?.on('keydown-ESC', () => {
       this.scene.pause();
-      this.scene.launch('pause', { damage: this.damage });
+      this.scene.launch('pause', { damage: this.damage, score: this.score });
     });
 
     this.time.addEvent({
-      delay: 2000,
+      delay: 1500,
       callback: this.spawnEnemy,
       callbackScope: this,
       loop: true,
@@ -192,16 +196,18 @@ export class Game extends Phaser.Scene {
     this.player.setVelocity(0);
 
     if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-300);
+      this.player.setVelocityX(-100 * this.movementSpeed);
     } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(300);
+      this.player.setVelocityX(100 * this.movementSpeed);
     }
 
     if (this.cursors.up.isDown) {
-      this.player.setVelocityY(-300);
+      this.player.setVelocityY(-100 * this.movementSpeed);
     } else if (this.cursors.down.isDown) {
-      this.player.setVelocityY(300);
+      this.player.setVelocityY(100 * this.movementSpeed);
     }
+
+    console.log(this.player.x, this.player.y)
 
     this.physics.overlap(
       this.laserGroup,
