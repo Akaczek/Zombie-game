@@ -36,7 +36,7 @@ export class PauseScene extends Phaser.Scene {
       color: '#fff',
     }).setOrigin(0.5, 0)
 
-    this.upgradeDamageButton = this.add.text(x, 230, 'Upgrade Damage (cost: 5)', {
+    this.upgradeDamageButton = this.add.text(x, 230, `Upgrade Damage (cost: ${this.dmg * 5})`, {
       fontSize: '24px',
       color: '#fff',
     }).setOrigin(0.5, 0)
@@ -47,23 +47,24 @@ export class PauseScene extends Phaser.Scene {
       color: '#fff',
     }).setOrigin(0.5, 0)
 
-    this.upgradeSpeedButton = this.add.text(x, 310, 'Upgrade Speed (cost: 3)', {
+    this.upgradeSpeedButton = this.add.text(x, 310, `Upgrade Speed (cost: ${this.speed * 3})`, {
       fontSize: '24px',
       color: '#fff',
     }).setOrigin(0.5, 0)
     this.upgradeSpeedButton.setInteractive();
 
-    this.speedText = this.add.text(x, 340, `Speed: ${this.dmg}`, {
+    this.speedText = this.add.text(x, 340, `Speed: ${this.speed}`, {
       fontSize: '24px',
       color: '#fff',
     }).setOrigin(0.5, 0)
 
     this.upgradeDamageButton.on('pointerdown', () => {
-      if (this.score >= 5) {
-        this.score -= 5;
+      if (this.score >= this.dmg * 5) {
+        this.score -= this.dmg * 5;
         this.dmg += 1;
         this.scoreText.setText(`Score: ${this.score}`);
         this.dmgText.setText(`Damage: ${this.dmg}`);
+        this.upgradeDamageButton.setText(`Upgrade Damage (cost: ${this.dmg * 5})`);
       }
     });
 
@@ -76,11 +77,12 @@ export class PauseScene extends Phaser.Scene {
     });
 
     this.upgradeSpeedButton.on('pointerdown', () => {
-      if (this.score >= 3) {
+      if (this.score >= this.dmg * 3) {
         this.score -= 3;
         this.speed += 1;
         this.scoreText.setText(`Score: ${this.score}`);
         this.speedText.setText(`Speed: ${this.speed}`);
+        this.upgradeSpeedButton.setText(`Upgrade Speed (cost: ${this.speed * 3})`);
       }
     });
 

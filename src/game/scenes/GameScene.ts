@@ -207,8 +207,6 @@ export class Game extends Phaser.Scene {
       this.player.setVelocityY(100 * (this.movementSpeed + 1));
     }
 
-    console.log(this.player.x, this.player.y)
-
     this.physics.overlap(
       this.laserGroup,
       this.enemyGroup,
