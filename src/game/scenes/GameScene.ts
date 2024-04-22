@@ -18,6 +18,10 @@ export class Game extends Phaser.Scene {
   scoreText!: Phaser.GameObjects.Text;
   damage: number = 1;
   movementSpeed: number = 1;
+  enemiesPerWave: number = 10;
+  increasePerWave: number = 5;
+  enemiesSpawned: number = 0;
+  enemyHP: number = 3;
 
   constructor() {
     super('game');
@@ -48,9 +52,11 @@ export class Game extends Phaser.Scene {
   }
 
   spawnEnemy() {
+    this.enemiesSpawned += 1;
     this.enemyGroup.addEnemy(
       this.player.x,
       this.player.y,
+      this.enemyHP
     );
   }
 
@@ -144,6 +150,13 @@ export class Game extends Phaser.Scene {
       this.events.off('lose', this.onLose, this);
       this.events.off('enemy-killed', this.onEnemyKilled, this);
       this.events.off('resume', this.onResume, this);
+      this.damage = 1;
+      this.score = 0;
+      this.movementSpeed = 1;
+      this.enemiesPerWave = 10;
+      this.increasePerWave = 5;
+      this.enemiesSpawned = 0;
+      this.enemyHP = 3;
     });
 
     if (this.input.keyboard) {
@@ -188,7 +201,7 @@ export class Game extends Phaser.Scene {
       delay: 1500,
       callback: this.spawnEnemy,
       callbackScope: this,
-      loop: true,
+      repeat: this.enemiesPerWave - 1,
     });
   }
 
@@ -224,6 +237,18 @@ export class Game extends Phaser.Scene {
 
     if (this.hearts.countActive() === 0) {
       this.events.emit('lose');
+    }
+
+    if (this.enemiesSpawned === this.enemiesPerWave) {
+      this.enemiesPerWave += this.increasePerWave;
+      this.enemiesSpawned = 0;
+      this.enemyHP += 1;
+      this.time.addEvent({
+        delay: 1500 - this.enemiesPerWave * 5,
+        callback: this.spawnEnemy,
+        callbackScope: this,
+        repeat: this.enemiesPerWave - 1,
+      });
     }
   }
 }
