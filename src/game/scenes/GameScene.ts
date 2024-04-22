@@ -17,7 +17,7 @@ export class Game extends Phaser.Scene {
   score: number = 0;
   scoreText!: Phaser.GameObjects.Text;
   damage: number = 1;
-  movementSpeed: number = 3;
+  movementSpeed: number = 1;
 
   constructor() {
     super('game');
@@ -80,14 +80,14 @@ export class Game extends Phaser.Scene {
   }
 
   onEnemyKilled() {
-    console.log('Enemy killed');
     this.score += 1;
     this.scoreText.setText(`Score: ${this.score}`);
   }
 
-  onResume(_: unknown, data: { damage: number, score: number }) {
+  onResume(_: unknown, data: { damage: number, score: number, speed: number}) {
     this.damage = data.damage;
     this.score = data.score;
+    this.movementSpeed = data.speed;
     this.scoreText.setText(`Score: ${this.score}`);
   }
 
@@ -181,7 +181,7 @@ export class Game extends Phaser.Scene {
 
     this.input.keyboard?.on('keydown-ESC', () => {
       this.scene.pause();
-      this.scene.launch('pause', { damage: this.damage, score: this.score });
+      this.scene.launch('pause', { damage: this.damage, score: this.score, speed: this.movementSpeed });
     });
 
     this.time.addEvent({
@@ -196,15 +196,15 @@ export class Game extends Phaser.Scene {
     this.player.setVelocity(0);
 
     if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-100 * this.movementSpeed);
+      this.player.setVelocityX(-100 * (this.movementSpeed + 1));
     } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(100 * this.movementSpeed);
+      this.player.setVelocityX(100 * (this.movementSpeed + 1));
     }
 
     if (this.cursors.up.isDown) {
-      this.player.setVelocityY(-100 * this.movementSpeed);
+      this.player.setVelocityY(-100 * (this.movementSpeed + 1));
     } else if (this.cursors.down.isDown) {
-      this.player.setVelocityY(100 * this.movementSpeed);
+      this.player.setVelocityY(100 * (this.movementSpeed + 1));
     }
 
     console.log(this.player.x, this.player.y)

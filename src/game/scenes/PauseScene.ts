@@ -1,16 +1,20 @@
 export class PauseScene extends Phaser.Scene {
   dmg: number = 0;
+  speed: number = 0;
   score: number = 0;
   dmgText!: Phaser.GameObjects.Text;
+  speedText!: Phaser.GameObjects.Text;
   scoreText!: Phaser.GameObjects.Text;
-  upgradeButton!: Phaser.GameObjects.Text;
+  upgradeDamageButton!: Phaser.GameObjects.Text;
+  upgradeSpeedButton!: Phaser.GameObjects.Text;
 
   constructor() {
     super('pause');
   }
 
-  init (data: { damage: number, score: number}) {
+  init (data: { damage: number, score: number, speed: number}) {
     this.dmg = data.damage;
+    this.speed = data.speed;
     this.score = data.score;
   }
 
@@ -32,18 +36,29 @@ export class PauseScene extends Phaser.Scene {
       color: '#fff',
     }).setOrigin(0.5, 0)
 
-    this.upgradeButton = this.add.text(x, 225, 'Upgrade Damage (cost: 5)', {
+    this.upgradeDamageButton = this.add.text(x, 230, 'Upgrade Damage (cost: 5)', {
       fontSize: '24px',
       color: '#fff',
     }).setOrigin(0.5, 0)
-    this.upgradeButton.setInteractive();
+    this.upgradeDamageButton.setInteractive();
 
     this.dmgText = this.add.text(x, 260, `Damage: ${this.dmg}`, {
       fontSize: '24px',
       color: '#fff',
     }).setOrigin(0.5, 0)
 
-    this.upgradeButton.on('pointerdown', () => {
+    this.upgradeSpeedButton = this.add.text(x, 310, 'Upgrade Speed (cost: 3)', {
+      fontSize: '24px',
+      color: '#fff',
+    }).setOrigin(0.5, 0)
+    this.upgradeSpeedButton.setInteractive();
+
+    this.speedText = this.add.text(x, 340, `Speed: ${this.dmg}`, {
+      fontSize: '24px',
+      color: '#fff',
+    }).setOrigin(0.5, 0)
+
+    this.upgradeDamageButton.on('pointerdown', () => {
       if (this.score >= 5) {
         this.score -= 5;
         this.dmg += 1;
@@ -52,18 +67,35 @@ export class PauseScene extends Phaser.Scene {
       }
     });
 
-    this.upgradeButton.on('pointerover', () => {
-      this.upgradeButton.setColor('#ff0');
+    this.upgradeDamageButton.on('pointerover', () => {
+      this.upgradeDamageButton.setColor('#ff0');
     });
 
-    this.upgradeButton.on('pointerout', () => {
-      this.upgradeButton.setColor('#fff');
+    this.upgradeDamageButton.on('pointerout', () => {
+      this.upgradeDamageButton.setColor('#fff');
+    });
+
+    this.upgradeSpeedButton.on('pointerdown', () => {
+      if (this.score >= 3) {
+        this.score -= 3;
+        this.speed += 1;
+        this.scoreText.setText(`Score: ${this.score}`);
+        this.speedText.setText(`Speed: ${this.speed}`);
+      }
+    });
+
+    this.upgradeSpeedButton.on('pointerover', () => {
+      this.upgradeSpeedButton.setColor('#ff0');
+    });
+
+    this.upgradeSpeedButton.on('pointerout', () => {
+      this.upgradeSpeedButton.setColor('#fff');
     });
 
     if (this.input.keyboard) {
       this.input.keyboard.once('keydown-ESC', () => {
         this.scene.stop();
-        this.scene.resume('game', { damage: this.dmg, score: this.score});
+        this.scene.resume('game', { damage: this.dmg, score: this.score, speed: this.speed});
       });
     }
   }
